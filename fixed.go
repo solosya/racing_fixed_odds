@@ -10,6 +10,7 @@ import (
     "io/ioutil"
     "flag"
     "os"
+    "time"
 )
 
 func getNumberWord(num int) string {
@@ -42,7 +43,9 @@ func getJson(url string, target interface{}) {
 }
 
 func main() {
-	dayPtr := flag.String("d", "2016-09-25", "day to fetch")
+	defaultDay := time.Now().Add(24 * time.Hour).Format("2006-01-02")
+
+	dayPtr := flag.String("d", defaultDay, "day to fetch, YYYY-MM-DD")
 	flag.Parse()
 
 	m := Payload{}
