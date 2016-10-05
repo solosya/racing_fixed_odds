@@ -14,21 +14,32 @@ func TestRunners(t *testing.T) {
 			Number: 1,
 			Odds: struct {
 				Win float32 `json:"returnWin"`
-			}{99.00},
+				Status string `json:"bettingStatus"`
+			}{99.00, "Open"},
 		},
 		{
 			Name: "HOW'S ANNIE",
 			Number: 2,
 			Odds: struct {
 				Win float32 `json:"returnWin"`
-			}{2.50},
+				Status string `json:"bettingStatus"`
+			}{2.50, "Open"},
 		},
 		{
-			Name: "Jane",
+			Name: "Scratchy McScratchALot",
 			Number: 3,
 			Odds: struct {
 				Win float32 `json:"returnWin"`
-			}{17.00},
+				Status string `json:"bettingStatus"`
+			}{2.50, "Scratched"},
+		},
+		{
+			Name: "Jane",
+			Number: 4,
+			Odds: struct {
+				Win float32 `json:"returnWin"`
+				Status string `json:"bettingStatus"`
+			}{17.00, "Open"},
 		},
 	}
 
