@@ -44,6 +44,8 @@ func getJson(url string, target interface{}) {
 
 func main() {
 	// initialise defaultDay to be used if no date is specified at run-time
+	folderPath := "/Volumes/Racing/Feeds/Fixies"
+
 	defaultDay := time.Now().Add(24 * time.Hour).Format("2006-01-02")
 
 	dayPtr := flag.String("d", defaultDay, "day to fetch, YYYY-MM-DD")
@@ -53,13 +55,26 @@ func main() {
 	m := Payload{}
 	getJson(fmt.Sprintf("https://api.beta.tab.com.au/v1/tab-info-service/racing/dates/%s/meetings?jurisdiction=VIC", *dayPtr), &m)
 
+	dayTime, err := time.Parse("2006-01-02", *dayPtr)
+	if err != nil {
+		panic(err)
+	}
+
+	dayString := dayTime.Format("Mon 2 Jan, 2006")
+
 	if (len(m.Meetings) > 0) {
-		os.Mkdir(fmt.Sprintf("/Volumes/Racing/Feeds/Fixies/%s", *dayPtr), 0644)
+		os.Mkdir(fmt.Sprintf("%s/%s", folderPath, dayString), 0644)
 
 		for _, meeting := range m.Meetings {
 			var buffer bytes.Buffer
 
-			buffer.WriteString(fmt.Sprintf("\n%s %s\n", meeting.Name, meeting.Date))
+			r := regexp.MustCompile(" \\(.+")
+			in := []byte(meeting.Name)
+			out := r.ReplaceAll(in, []byte(""))
+
+			meetingName := strings.Title(strings.ToLower(string(out))) // convert uppercase string to lowercase, then titlecase that -- titlecasing uppercase text does not work
+
+			buffer.WriteString(fmt.Sprintf("\n%s %s\n", meetingName, meeting.Date))
 			races := Races{}
 
 			// races are stored differently depending on the state of the meeting
@@ -69,17 +84,25 @@ func main() {
 				races.Races = meeting.Races
 			}
 
+			fixedOddsRaces := []Race{}
+
 			for _, race := range races.Races {
 				if (race.HasFixed && race.Link.Self != "") {
+					fixedOddsRaces = append(fixedOddsRaces, race)
+				}
+			}
+
+			if (len(fixedOddsRaces) > 0) {
+				for _, race := range fixedOddsRaces {
 					getJson(race.Link.Self, &race)
 
 					buffer.WriteString(fmt.Sprintf("Race %s - \n", getNumberWord(race.Number)))
 					getFixedOdds(race.Runners, &buffer)
 				}
-			}
 
-			if err := ioutil.WriteFile(fmt.Sprintf("/Volumes/Racing/Feeds/Fixies/%s/%s.txt", meeting.Date, meeting.Name), buffer.Bytes(), 0644); err != nil {
-				panic(err)
+				if err := ioutil.WriteFile(fmt.Sprintf("%s/%s/%s - TAB Fixed Odds - %s.txt", folderPath, dayString, meetingName, dayString), buffer.Bytes(), 0644); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}
