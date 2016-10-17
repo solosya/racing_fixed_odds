@@ -1,6 +1,6 @@
 package main
 
-type Payload struct {
+type TABPayload struct {
 	Meetings []Meeting `json:"meetings"`
 }
 
@@ -23,15 +23,21 @@ type Race struct {
 	Link struct{
 			Self string `json:"self"`
 		} `json:"_links,omitempty"`
-	Runners []Runner `json:"runners"`
+	TABRunners []TABRunner `json:"runners"`
+	Runners []Runner
 	HasFixed bool `json:"hasFixedOdds"`
 }
 
-type Runner struct {
+type TABRunner struct {
 	Name string `json:"runnerName"`
 	Number int `json:"runnerNumber"`
 	Odds struct{
 			Win float32 `json:"returnWin"`
 			Status string `json:"bettingStatus"`
 		} `json:"fixedOdds"`
+}
+
+type Runner struct {
+	Name string
+	Price float32
 }
