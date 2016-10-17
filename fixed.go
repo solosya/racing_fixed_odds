@@ -3,6 +3,8 @@ package main
 import (
     "net/http"
     "encoding/json"
+    "encoding/xml"
+    "compress/gzip"
     "fmt"
     "strings"
     "bytes"
@@ -11,6 +13,7 @@ import (
     "flag"
     "os"
     "time"
+    "strconv"
 )
 
 func getNumberWord(num int) string {
@@ -42,6 +45,48 @@ func getJson(url string, target interface{}) {
     }
 }
 
+func getXML(url string, target interface{}) (err error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("Accept-Encoding", "gzip")
+
+	r, err := client.Do(req)
+
+	if err != nil{
+	    return
+	}
+    defer r.Body.Close()
+
+    if (r.Status != "404 Not Found") {
+	    reader, _ := gzip.NewReader(r.Body)
+	    defer reader.Close()
+
+		if err = xml.NewDecoder(reader).Decode(target); err != nil {
+			return
+		}
+	} else {
+		return fmt.Errorf("404 Not Found!")
+	}
+
+	return
+}
+
+func getJsonAuth(url string, target interface{}) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	req.SetBasicAuth("Rohan", "cham045F-1")
+	r, err := client.Do(req)
+
+	if err != nil{
+	    panic (err)
+	}
+    defer r.Body.Close()
+
+	if err = json.NewDecoder(r.Body).Decode(target); err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 	// initialise defaultDay to be used if no date is specified at run-time
 	defaultDay := time.Now().Add(24 * time.Hour).Format("2006-01-02")
@@ -58,7 +103,69 @@ func main() {
 
 	folderPath := fmt.Sprintf("/Volumes/Racing/Feeds/AFL/%s", dayString)
 
-	{
+// UBET
+	if true {
+		ubetDay := dayTime.Format("2006/01/02")
+
+		api := APIPayload{}
+		getJsonAuth(fmt.Sprintf("http://racing-api.pagemasters.com.au/meeting?date=%s", dayTime), &api)
+
+		createFile := createCompiler("UBET", folderPath)
+
+		for _, meeting := range api.Meetings {
+			ubetMeeting := Meeting{Date: dayString}
+
+			for _, betting := range meeting.Betting {
+				if (betting.Agency == "ubet") {
+					m := UBETPayload{}
+
+					meetingPath := fmt.Sprintf("https://tatts.com/pagedata/racing/%s/%s.xml", ubetDay, strings.ToUpper(betting.Code))
+
+					if err := getXML(meetingPath, &m); err == nil {
+
+						fmt.Printf("%s\n", m.Meeting.Name)
+
+						ubetMeeting.Name = m.Meeting.Name
+
+						races := []Race{}
+
+						for _, race := range m.Meeting.Races {
+							fmt.Printf("Race!\n")
+							r := UBETPayload{}
+							getXML(fmt.Sprintf("https://tatts.com/pagedata/racing/%s/%s%s.xml", ubetDay, strings.ToUpper(betting.Code), race.Number), &r)
+
+							runners := []Runner{}
+
+							for _, runner := range r.Meeting.Races[0].Runners {
+								fmt.Printf("%s\n", runner)
+
+								if ((runner.Scratched == "N") && (runner.Odds.Price != 0.00)) {
+									runners = append(runners, Runner{
+										Name: runner.Name,
+										Price: runner.Odds.Price,	
+									})
+								}
+							}
+
+							raceNumber, _ := strconv.Atoi(race.Number)
+
+							races = append(races, Race{
+								Number: raceNumber,
+								Runners: runners,	
+							})
+						}
+
+						ubetMeeting.Races = races
+
+						createFile(ubetMeeting)
+					}
+				}
+			}
+		}
+	}
+
+// TAB
+	if true {
 		m := TABPayload{}
 		getJson(fmt.Sprintf("https://api.beta.tab.com.au/v1/tab-info-service/racing/dates/%s/meetings?jurisdiction=VIC", *dayPtr), &m)
 
