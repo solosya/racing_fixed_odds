@@ -11,41 +11,25 @@ func TestRunners(t *testing.T) {
 	runners := []Runner{
 		{
 			Name: "Alice",
-			Number: 1,
-			Odds: struct {
-				Win float32 `json:"returnWin"`
-				Status string `json:"bettingStatus"`
-			}{99.00, "Open"},
+			Price: 99.00,
 		},
 		{
 			Name: "HOW'S ANNIE",
-			Number: 2,
-			Odds: struct {
-				Win float32 `json:"returnWin"`
-				Status string `json:"bettingStatus"`
-			}{2.50, "Open"},
-		},
-		{
-			Name: "Scratchy McScratchALot",
-			Number: 3,
-			Odds: struct {
-				Win float32 `json:"returnWin"`
-				Status string `json:"bettingStatus"`
-			}{2.50, "Scratched"},
+			Price: 1.01,
 		},
 		{
 			Name: "Jane",
-			Number: 4,
-			Odds: struct {
-				Win float32 `json:"returnWin"`
-				Status string `json:"bettingStatus"`
-			}{17.00, "Open"},
+			Price: 17.00,
+		},
+		{
+			Name: "UBET Scratching",
+			Price: 1.00,
 		},
 	}
 
 	getFixedOdds(runners, &buffer)
 
-	expectedOutput := "  2.50 How's Annie\n 17.00 Jane\n 99.00 Alice\n\n"
+	expectedOutput := "  1.01 How's Annie\n 17.00 Jane\n 99.00 Alice\n\n"
 
 	if buffer.String() != expectedOutput {
 		t.Errorf("\nExpected:\n%sReceived:\n%s", expectedOutput, buffer.String())
