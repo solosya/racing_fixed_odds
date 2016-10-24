@@ -26,7 +26,7 @@ func getJson(url string, target interface{}) {
 }
 
 func folderPath(date time.Time) string {
-	return fmt.Sprintf("/Volumes/Racing/Feeds/AFL/%s", date.Format("Mon 2 Jan, 2006"))
+	return fmt.Sprintf("/Volumes/Racing/Feeds/Fixies/%s", date.Format("Mon 2 Jan, 2006"))
 } 
 
 func main() {
