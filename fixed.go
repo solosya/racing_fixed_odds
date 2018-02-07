@@ -282,6 +282,12 @@ func main() {
 		}
 	}
 
+
+
+
+
+
+
 	//TAB
 	if stringInSlice("TAB", api_arr) {
 		m := TABPayload_json{}
@@ -352,8 +358,10 @@ func main() {
 		}
 
 		for _, meeting := range finalMeetings {
-			createFile := createCompiler("TAB", folderPath(meeting.DateFormat))
-			createFile(meeting)
+			if len(meeting.Races) > 0 {
+				createFile := createCompiler("TAB", folderPath(meeting.DateFormat))
+				createFile(meeting)
+			}
 		}
 	}
 }
