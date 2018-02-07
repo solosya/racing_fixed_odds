@@ -214,7 +214,6 @@ func main() {
 
 		for _, address := range addresses {
 			ubet := UBETPayload{}
-			fmt.Println(address.Address)
 
 			getJson(address.Address, &ubet)
 
