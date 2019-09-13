@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -39,8 +40,8 @@ func getJSON(url string, target interface{}) {
 }
 
 func folderPath(date time.Time) string {
-	// return fmt.Sprintf("/Volumes/Racing/Feeds/Fixies/%s", date.Format("Mon 2 Jan, 2006"))
-	return fmt.Sprintf("/go/files/%s", date.Format("Mon 2 Jan, 2006"))
+	return fmt.Sprintf("/Volumes/Racing/Feeds/Fixies/%s", date.Format("Mon 2 Jan, 2006"))
+	// return fmt.Sprintf("/go/src/github.com/user/myProject/app/files/%s", date.Format("Mon 2 Jan, 2006"))
 }
 
 func stringInSlice(a string, list []string) bool {
@@ -58,7 +59,6 @@ func main() {
 	api := "TAB,UBET"
 	dayPtr := flag.String("d", defaultDay, "day to fetch, YYYY-MM-DD")
 	apiPtr := flag.String("api", api, "API's to fetch from (Tab, Ubet, Ladbrokes")
-	fmt.Println("mainlining the main")
 
 	flag.Parse()
 
@@ -82,11 +82,9 @@ func main() {
 		url := fmt.Sprintf("https://api-affiliates.ladbrokes.com.au/racing/meetings?date_from=%s&date_to=%s&category=T&limit=40&country=AUS", date, date)
 		fmt.Println(url)
 		getJSON(url, &Meetings)
-		// itr := 0
 		// pprint(Meetings["data"].Meetings[0])
 
 		for _, meeting := range Meetings["data"].Meetings {
-			// pprint(meeting)
 			var finalRaces []Race
 
 			for _, race := range meeting.Races {
@@ -96,19 +94,27 @@ func main() {
 				var finalRunners []Runner
 
 				for _, runner := range Runners["data"].Runners {
+
+					if runner.Odds.FixedWin < 1 {
+						continue
+					}
+
 					runnerTemp := Runner{
 						Name:  runner.Name,
 						Price: runner.Odds.FixedWin,
 					}
 					finalRunners = append(finalRunners, runnerTemp)
+
 				}
 
 				raceTemp := Race{
-					Name:       race.Name,
+					Name:       "Race " + strconv.Itoa(race.RaceNumber),
 					RaceNumber: race.RaceNumber,
 					Runners:    finalRunners,
 				}
-				finalRaces = append(finalRaces, raceTemp)
+				if len(raceTemp.Runners) > 0 {
+					finalRaces = append(finalRaces, raceTemp)
+				}
 
 			}
 
@@ -121,132 +127,24 @@ func main() {
 				Races:    finalRaces,
 			}
 		}
-		// pprint(finalMeetings)
 
 		for _, meeting := range finalMeetings {
-			fmt.Println(meeting.Name)
-			fmt.Println(meeting.Date)
+			if len(meeting.Races) < 1 {
+				continue
+			}
 			createFile := createCompiler("LADBROKE TEST", folderPath(requestedDay))
-
 			createFile(meeting)
 		}
 
-		// for _, meeting := range LADMeetings {
-		// 	// fmt.Println(meeting.Name)
-
-		// 	if len(meeting.races) == 0 {
-		// 		continue
-		// 	}
-
-		// 	var finalRaces []Race
-		// 	for _, race := range meeting.races {
-
-		// 		var finalRunners []Runner
-
-		// 		for _, runner := range race.runners {
-		// 			runnerTemp := Runner{
-		// 				Name:  runner.Name,
-		// 				Price: runner.Price,
-		// 			}
-
-		// 			finalRunners = append(finalRunners, runnerTemp)
-		// 		}
-
-		// 		raceTemp := Race{
-		// 			Name:       race.name,
-		// 			RaceNumber: race.raceNumber,
-		// 			Runners:    finalRunners,
-		// 		}
-
-		// 		finalRaces = append(finalRaces, raceTemp)
-		// 	}
-
-		// 	meetingid := meeting.Name + meeting.RaceType
-
-		// 	finalMeetings[meetingid] = Meeting{
-		// 		Name:     meeting.Name,
-		// 		RaceType: meeting.RaceType,
-		// 		Date:     meeting.Date,
-		// 		Races:    finalRaces,
-		// 	}
-		// }
-
-		// for _, meeting := range finalMeetings {
-		// 	createFile(meeting)
-		// }
-
-		// }
-		// for _, race := range racesJSON {
-		// 	itr++
-
-		// 	time.Sleep(1 * time.Second)
-
-		// 	raceType := race.Type
-		// 	if raceType == "T" {
-		// 		raceType = "R"
-		// 	}
-
-		// 	raceId := race.Id
-		// 	raceNumber := race.RaceNum
-		// 	meetingId := race.Meeting + raceType
-
-		// 	if _, ok := LADMeetings[meetingId]; !ok {
-		// 		LADMeetings[meetingId] = LADMeeting{
-		// 			Name:     race.Meeting,
-		// 			RaceType: raceType,
-		// 			Date:     requestedDay.Format("2006-01-02"),
-		// 			races:    map[int]LADRaces{},
-		// 		}
-		// 	}
-
-		// 	if _, a_ok := LADMeetings[meetingId].races[raceNumber]; !a_ok {
-
-		// 		LadRunners := make(map[string]map[string]map[string]LADRunnersJSON)
-		// 		getJSON(fmt.Sprintf("https://www.ladbrokes.com.au/api/feed/eventRunners?event_id=%d", raceId), &LadRunners)
-
-		// 		LADMeetings[meetingId].races[raceNumber] = LADRaces{
-		// 			Id:         race.Id,
-		// 			name:       "Race " + strconv.Itoa(race.RaceNum),
-		// 			raceNumber: race.RaceNum,
-		// 			runners:    map[string]Runner{},
-		// 		}
-
-		// 	Loop: // break back to here in event of no fixed odds on race (event)
-		// 		for _, event := range LadRunners {
-		// 			for _, competitors := range event {
-		// 				for k, horse := range competitors {
-		// 					// fmt.Println(horse.DetailedPricing.HasFixed)
-		// 					if horse.DetailedPricing.HasFixed == false || horse.DetailedPricing.Price < 1 {
-
-		// 						// If horse has zero price or no fixed odds, delete this race from the result
-		// 						delete(LADMeetings[meetingId].races, raceNumber)
-		// 						break Loop
-		// 					}
-		// 					LADMeetings[meetingId].races[raceNumber].runners[k] = Runner{
-		// 						Name:  horse.Name,
-		// 						Price: horse.DetailedPricing.Price,
-		// 					}
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-
-		// 	// if itr > 100 {
-		// 	// 	break
-		// 	// }
-		// }
-
-		// fmt.Printf("%+v\n", finalMeetings)
-		// pprint(finalMeetings)
 	}
 
 	// UBET
 	// if stringInSlice("UBET", apiArr) {
 
 	// 	addresses := []struct{ Address, RaceType string }{
-	// 		{Address: "https://ubet.com/api/sports/8/102", RaceType: "R"},
-	// 		{Address: "https://ubet.com/api/sports/18/101", RaceType: "H"},
-	// 		{Address: "https://ubet.com/api/sports/19/144", RaceType: "G"},
+	// 		{Address: "https://tab.ubet.com/api/sports/8/102", RaceType: "R"},
+	// 		{Address: "https://tab.ubet.com/api/sports/18/101", RaceType: "H"},
+	// 		{Address: "https://tab.ubet.com/api/sports/19/144", RaceType: "G"},
 	// 	}
 
 	// 	for _, address := range addresses {
@@ -317,80 +215,80 @@ func main() {
 	// }
 
 	//TAB
-	// if stringInSlice("TAB", apiArr) {
-	// 	m := TABPayloadJSON{}
-	// 	finalMeetings := make(map[string]Meeting)
+	if stringInSlice("TAB", apiArr) {
+		m := TABPayloadJSON{}
+		finalMeetings := make(map[string]Meeting)
 
-	// 	getJSON(fmt.Sprintf("https://api.beta.tab.com.au/v1/tab-info-service/racing/dates/%s/meetings?jurisdiction=VIC", *dayPtr), &m)
+		getJSON(fmt.Sprintf("https://api.beta.tab.com.au/v1/tab-info-service/racing/dates/%s/meetings?jurisdiction=VIC", *dayPtr), &m)
 
-	// 	for _, meeting := range m.Meetings {
-	// 		races := TABRacesJSON{}
+		for _, meeting := range m.Meetings {
+			races := TABRacesJSON{}
 
-	// 		// races are stored differently depending on the state of the meeting
-	// 		if meeting.Mnemonic != "" {
-	// 			getJSON(meeting.Links.Races, &races)
-	// 		} else {
-	// 			races.Races = meeting.Races
-	// 		}
+			// races are stored differently depending on the state of the meeting
+			if meeting.Mnemonic != "" {
+				getJSON(meeting.Links.Races, &races)
+			} else {
+				races.Races = meeting.Races
+			}
 
-	// 		fixedOddsRaces := []TABRaceJSON{}
+			fixedOddsRaces := []TABRaceJSON{}
 
-	// 		for _, race := range races.Races {
-	// 			if race.HasFixed && race.Link.Self != "" {
-	// 				fixedOddsRaces = append(fixedOddsRaces, race)
-	// 			}
-	// 		}
+			for _, race := range races.Races {
+				if race.HasFixed && race.Link.Self != "" {
+					fixedOddsRaces = append(fixedOddsRaces, race)
+				}
+			}
 
-	// 		meeting.Races = []TABRaceJSON{}
-	// 		var finalRaces []Race
+			meeting.Races = []TABRaceJSON{}
+			var finalRaces []Race
 
-	// 		if len(fixedOddsRaces) > 0 {
-	// 			for _, race := range fixedOddsRaces {
+			if len(fixedOddsRaces) > 0 {
+				for _, race := range fixedOddsRaces {
 
-	// 				var finalRunners []Runner
+					var finalRunners []Runner
 
-	// 				getJSON(race.Link.Self, &race)
+					getJSON(race.Link.Self, &race)
 
-	// 				for _, runner := range race.TABRunners {
-	// 					if (runner.Odds.Win != 0.00) && (runner.Odds.Status == "Open") {
-	// 						finalRunners = append(finalRunners, Runner{
-	// 							Name:  runner.Name,
-	// 							Price: runner.Odds.Win,
-	// 						})
-	// 					}
-	// 				}
+					for _, runner := range race.TABRunners {
+						if (runner.Odds.Win != 0.00) && (runner.Odds.Status == "Open") {
+							finalRunners = append(finalRunners, Runner{
+								Name:  runner.Name,
+								Price: runner.Odds.Win,
+							})
+						}
+					}
 
-	// 				finalRaces = append(finalRaces, Race{
-	// 					Name:       fmt.Sprintf("Race %d", race.Number),
-	// 					RaceNumber: race.Number,
-	// 					Runners:    finalRunners,
-	// 				})
-	// 			}
-	// 		}
+					finalRaces = append(finalRaces, Race{
+						Name:       fmt.Sprintf("Race %d", race.Number),
+						RaceNumber: race.Number,
+						Runners:    finalRunners,
+					})
+				}
+			}
 
-	// 		meetingid := fmt.Sprintf("%s%s", meeting.Name, meeting.RaceType)
+			meetingid := fmt.Sprintf("%s%s", meeting.Name, meeting.RaceType)
 
-	// 		dateFormat, err := time.Parse("2006-01-02", meeting.Date)
-	// 		if err != nil {
-	// 			panic(err)
-	// 		}
+			dateFormat, err := time.Parse("2006-01-02", meeting.Date)
+			if err != nil {
+				panic(err)
+			}
 
-	// 		finalMeetings[meetingid] = Meeting{
-	// 			Name:       meeting.Name,
-	// 			RaceType:   meeting.RaceType,
-	// 			Date:       meeting.Date,
-	// 			DateFormat: dateFormat,
-	// 			Races:      finalRaces,
-	// 		}
-	// 	}
+			finalMeetings[meetingid] = Meeting{
+				Name:       meeting.Name,
+				RaceType:   meeting.RaceType,
+				Date:       meeting.Date,
+				DateFormat: dateFormat,
+				Races:      finalRaces,
+			}
+		}
 
-	// 	for _, meeting := range finalMeetings {
-	// 		if len(meeting.Races) > 0 {
-	// 			createFile := createCompiler("TAB", folderPath(meeting.DateFormat))
-	// 			createFile(meeting)
-	// 		}
-	// 	}
-	// }
+		for _, meeting := range finalMeetings {
+			if len(meeting.Races) > 0 {
+				createFile := createCompiler("TAB", folderPath(meeting.DateFormat))
+				createFile(meeting)
+			}
+		}
+	}
 }
 
 func createCompiler(agency string, folderPath string) func(Meeting) {
@@ -414,13 +312,11 @@ func createCompiler(agency string, folderPath string) func(Meeting) {
 
 		fileName := fmt.Sprintf("%s %s - %s Fixed Odds - %s.txt", meetingName, meeting.RaceType, agency, meeting.Date)
 
-		println(folderPath)
-		println(fileName)
 		os.Mkdir(fmt.Sprintf("%s", folderPath), 0644)
 
 		filePath := fmt.Sprintf("%s/%s", folderPath, fileName)
 
-		fmt.Printf("%s\n", filePath)
+		// fmt.Printf("%s\n", filePath)
 
 		if err := ioutil.WriteFile(filePath, buffer.Bytes(), 0644); err != nil {
 			panic(err)

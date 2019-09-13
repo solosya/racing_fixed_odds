@@ -4,22 +4,6 @@ import "time"
 
 // LADBROKES data structures
 
-// // LADMeeting ...
-// type LADMeeting struct {
-// 	Name     string
-// 	RaceType string
-// 	Date     string
-// 	races    map[int]LADRaces
-// }
-
-// // LADRaces ...
-// type LADRaces struct {
-// 	ID         int
-// 	name       string
-// 	raceNumber int
-// 	runners    map[string]Runner
-// }
-
 // LadMeetings ...
 type LadMeetings struct {
 	Meetings []*LadMeetingData `json:"meetings"`
@@ -102,14 +86,6 @@ type LADEventRunner struct {
 	Trainer            string     `json:"trainer"`
 }
 
-// type LADRunnersJSON struct {
-// 	Name            string `json:"Name"`
-// 	DetailedPricing struct {
-// 		HasFixed bool    `json:"fixedWin"`
-// 		Price    float32 `json:"startingPriceGuarantee"`
-// 	} `json:"DetailedPricing"`
-// }
-
 // UBETPayload ...
 type UBETPayload struct {
 	Meetings []UBETMainEventJSON `json:"MainEvents"`
@@ -177,7 +153,7 @@ type TABRunnerJSON struct {
 	Name   string `json:"runnerName"`
 	Number int    `json:"runnerNumber"`
 	Odds   struct {
-		Win    float32 `json:"returnWin"`
+		Win    float64 `json:"returnWin"`
 		Status string  `json:"bettingStatus"`
 	} `json:"fixedOdds"`
 }
