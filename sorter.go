@@ -4,8 +4,10 @@ import (
 	"sort"
 )
 
+// By ...
 type By func(p1, p2 *Runner) bool
 
+// Sort ...
 func (by By) Sort(runners []Runner) {
 	ps := &runnerSorter{
 		runners: runners,
