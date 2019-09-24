@@ -53,13 +53,14 @@ func stringInSlice(a string, list []string) bool {
 }
 
 func main() {
+
 	// initialise defaultDay to be used if no date is specified at run-time
 	defaultDay := time.Now().Add(24 * time.Hour).Format("2006-01-02")
 	api := "TAB,UBET"
-	// rtype := ""
+	rtype := "T"
 	dayPtr := flag.String("d", defaultDay, "day to fetch, YYYY-MM-DD")
 	apiPtr := flag.String("api", api, "API's to fetch from (Tab, Ubet, Ladbrokes")
-	// raceTypePtr := flag.String("type", rtype, "Race types: (T)horoughbred, (H)arnes, (G)reyhounds")
+	raceTypePtr := flag.String("type", rtype, "Race types: (T)horoughbred, (H)arnes, (G)reyhounds")
 
 	flag.Parse()
 
@@ -79,7 +80,7 @@ func main() {
 		finalMeetings := make(map[string]Meeting)
 
 		date := requestedDay.Format("2006-01-02")
-		url := fmt.Sprintf("https://api-affiliates.ladbrokes.com.au/racing/meetings?date_from=%s&date_to=%s&country=AUS", date, date)
+		url := fmt.Sprintf("https://api-affiliates.ladbrokes.com.au/racing/meetings?date_from=%s&date_to=%s&category=%s&country=AUS", date, date, *raceTypePtr)
 		// fmt.Println(url)
 		getJSON(url, &Meetings)
 
