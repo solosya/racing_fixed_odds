@@ -131,7 +131,7 @@ func main() {
 			if len(meeting.Races) < 1 {
 				continue
 			}
-			createFile := createCompiler("LADBROKE TEST", folderPath(requestedDay))
+			createFile := createCompiler("LADBROKE", folderPath(requestedDay))
 			createFile(meeting)
 		}
 
