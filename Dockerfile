@@ -20,4 +20,5 @@ CMD if [ ${APP_ENV} = production ]; \
 EXPOSE 8080
 
 # docker run -it -v $(pwd):/go/src/github.com/user/myProject/app golang /bin/bash
+#./go build
 #./app -api=LAD
